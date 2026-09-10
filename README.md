@@ -5,6 +5,8 @@ The Git origin is `git@github.com:eusean-tg/dotfiles.git`.
 Each machine keeps its working source in `~/.local/share/chezmoi`.
 The GitHub repository is public; machine-specific overrides and credentials
 stay outside the source tree.
+Shared uses the public HTTPS origin because it has no GitHub SSH authentication;
+pushing from shared requires configuring GitHub authentication there.
 
 ## Edit and sync
 
@@ -45,6 +47,7 @@ Initialize the source, install plugins, and review the resulting diff:
 
 ```sh
 chezmoi init git@github.com:eusean-tg/dotfiles.git
+chezmoi git -- config user.email 304349849+eusean-tg@users.noreply.github.com
 sh "$(chezmoi source-path)/scripts/bootstrap.sh"
 chezmoi diff
 chezmoi apply
@@ -54,6 +57,8 @@ exec zsh -l
 For a machine without GitHub SSH authentication, use
 `chezmoi init https://github.com/eusean-tg/dotfiles.git`. Public HTTPS cloning
 needs no credentials; pushing still requires GitHub authentication.
+The repository-local noreply email keeps commits compatible with GitHub's
+private-email protection without changing other repositories' Git settings.
 
 Set zsh as the login shell if needed with `chsh -s "$(command -v zsh)"`.
 The selected zsh binary must be listed in `/etc/shells`.
@@ -108,8 +113,9 @@ Each machine's migration directory contains its rollback instructions. Archive
 the managed source and any later edits before restoring a snapshot. Shell
 history, tmux sessions, and Neovim data are separate from these config archives.
 
-The Mac and shared retain the LAN repository as the `lan` remote for explicit
-backup pushes (`chezmoi git -- push lan main`). Normal pushes and pulls use GitHub.
+The Mac and shared retain the LAN repository as the `lan` remote. Its `main`
+branch preserves the original history. Back up the GitHub history separately
+with `chezmoi git -- push lan main:github-main`. Normal pushes and pulls use GitHub.
 
 Shared's Neovim 0.12.4 lives in `~/.local/opt/nvim-0.12.4`, exposed through
 `~/.local/bin/nvim`. Its distribution Neovim remains at `/usr/bin/nvim`.
