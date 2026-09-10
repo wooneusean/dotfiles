@@ -109,7 +109,9 @@ git_sweep() {
   local -a branches
   branches=("${(@f)$(git branch -vv | awk '/: gone]/ {sub(/^[*+ ]+/, ""); print $1}')}")
   for branch in "${branches[@]}"; do
-    [[ -n $branch ]] && git branch "$flag" -- "$branch"
+    if [[ -n $branch ]]; then
+      git branch "$flag" -- "$branch" || return
+    fi
   done
   return 0
 }

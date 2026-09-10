@@ -22,7 +22,7 @@ local options = {
     pg_format = {
       prepend_args = {
         "-u",
-        "1", -- keywords lowercase (2 would uppercase `close` -> `CLOSE`,
+        "1", -- lowercase keywords
         "-U",
         "1", -- type names lowercase
         "-f",
