@@ -29,7 +29,7 @@ o.splitright = true
 o.splitbelow = true
 
 -- ── Misc ───────────────────────────────────────────────────────
-o.confirm = true -- ask to save instead of failing on :q
+o.confirm = true -- confirm before discarding unsaved changes
 o.updatetime = 250 -- faster CursorHold (gitsigns, diagnostics)
 o.timeoutlen = 400
 o.termguicolors = true

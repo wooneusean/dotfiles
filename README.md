@@ -1,25 +1,122 @@
-# Personal dotfiles
+# Dotfiles
 
-One chezmoi source for macOS and Linux: zsh, Powerlevel10k, tmux, and Neovim.
-The Git origin is `git@github.com:eusean-tg/dotfiles.git`.
-Each machine keeps its working source in `~/.local/share/chezmoi`.
-The GitHub repository is public; machine-specific overrides and credentials
-stay outside the source tree.
-Shared uses the public HTTPS origin because it has no GitHub SSH authentication;
-pushing from shared requires configuring GitHub authentication there.
+[chezmoi](https://www.chezmoi.io/)-managed configuration for macOS and Linux:
 
-## Edit and sync
+- Zsh with Oh My Zsh, Powerlevel10k, completions, autosuggestions, and syntax highlighting.
+- tmux with mouse support, Vim-style pane navigation, and session persistence.
+- Neovim with NvChad, language servers, formatters, Git integration, and HTTP tooling.
+
+## Requirements
+
+Install these tools before applying the configuration:
+
+| Tool | Requirement |
+| --- | --- |
+| chezmoi and Git | Configuration management and plugin downloads |
+| Zsh | 5.9 or later |
+| tmux | Terminal multiplexer |
+| Neovim | 0.12 or later |
+| tree-sitter CLI | 0.26.1 or later, installed through a package manager or upstream release |
+| C/C++ compiler | Builds Treesitter parsers |
+| Node.js and npm | JavaScript-based language servers and Prettier |
+| Go | Go language server and formatting tools |
+| curl, tar, gzip, and unzip | Plugin and editor-tool installation |
+
+Use a [Nerd Font](https://www.nerdfonts.com/) in the terminal to display prompt
+and file icons. The shell sets `LANG=en_US.UTF-8`; enable that locale or override
+`LANG` in `~/.zshrc.local` with a locale available on the system.
+
+Optional shell tools include eza, bat (`batcat` on Ubuntu), fzf, fd (`fdfind` on
+Ubuntu), zoxide, lazygit, pnpm, and Zed. An existing nvm installation under
+`~/.nvm` loads on the first Node command or Neovim launch. Bun integration uses
+`~/.bun` when installed.
+
+## Installation
+
+Fork this repository to maintain and publish your own configuration. Substitute
+your fork's URL in the commands below. Public HTTPS cloning requires no GitHub
+authentication; pushing requires authentication and write access to the repository.
+
+Back up any existing files listed in [Configuration layout](#configuration-layout).
+Initialize the source and install the shell and tmux plugins:
+
+```sh
+chezmoi init https://github.com/eusean-tg/dotfiles.git
+sh "$(chezmoi source-path)/scripts/bootstrap.sh"
+chezmoi diff
+```
+
+Review the diff, then install the configuration:
+
+```sh
+chezmoi apply
+exec zsh -l
+```
+
+The bootstrap script clones missing Oh My Zsh, Powerlevel10k, zsh plugins, and
+tmux plugins. It preserves existing Git clones and refuses to replace existing
+non-Git directories. It does not install system packages or editor tools.
+Complete the [Neovim setup](dot_config/nvim/README.md#setup) after applying.
+
+To use SSH authentication, initialize with your repository's SSH URL. Set your
+own Git identity before committing; repository-local settings are available
+through `chezmoi git -- config user.name` and `chezmoi git -- config user.email`.
+For GitHub email privacy, use the noreply address from your GitHub email settings.
+
+To make zsh the login shell, run `chsh -s "$(command -v zsh)"`. The selected
+binary must be listed in `/etc/shells`.
+
+## Configuration layout
+
+The source directory defaults to `~/.local/share/chezmoi`; `chezmoi source-path`
+prints its location. Chezmoi translates the source filenames into these targets:
+
+| Source | Installed path | Purpose |
+| --- | --- | --- |
+| `dot_zshrc` | `~/.zshrc` | Loads the interactive shell configuration |
+| `dot_config/zsh/interactive.zsh` | `~/.config/zsh/interactive.zsh` | Plugins, history, aliases, and functions |
+| `dot_zshenv` | `~/.zshenv` | User-local binaries and optional Cargo environment |
+| `dot_zprofile.tmpl` | `~/.zprofile` | Homebrew executable paths on macOS and user-local paths |
+| `dot_p10k.zsh` | `~/.p10k.zsh` | Compact one-line prompt |
+| `dot_tmux.conf` | `~/.tmux.conf` | Pane navigation and session persistence |
+| `dot_config/nvim` | `~/.config/nvim` | NvChad configuration and plugin lockfile |
+
+Oh My Zsh loads from `~/.oh-my-zsh`, with third-party plugins under its
+`custom/plugins` directory. Zsh plugins are installed as Git clones. tmux loads
+plugins from `~/.tmux/plugins`; session restoration is enabled at server startup
+and the save interval is 15 minutes.
+
+## Customization
+
+Edit managed files through chezmoi, then review and apply the changes:
 
 ```sh
 chezmoi edit ~/.config/zsh/interactive.zsh
 chezmoi diff
 chezmoi apply
+```
+
+After editing an installed file directly, run `chezmoi re-add <path>` to capture
+the change in the source. Use `chezmoi add <path>` to manage a new file.
+Use `chezmoi edit` for templated files such as `~/.zprofile`; `re-add` does not
+update templates.
+
+`~/.zshrc.local` loads after the shell configuration and holds per-machine
+settings such as environment variables, paths, and `WG_DIR` for the `wg_all`
+helper. `~/.tmux.conf.local` loads before tmux plugin initialization. These
+optional files are unmanaged. Keep credentials out of the source repository.
+
+## Synchronization
+
+Commit source changes and push them to your repository:
+
+```sh
 chezmoi git -- add -A
 chezmoi git -- commit -m 'Adjust shell configuration'
 chezmoi git -- push
 ```
 
-On the other machine:
+On another installation:
 
 ```sh
 chezmoi git -- pull --ff-only
@@ -27,95 +124,24 @@ chezmoi diff
 chezmoi apply
 ```
 
-Commit local source changes before pulling. If both machines have new commits,
-resolve the Git conflict in the source directory before applying. Changes made
-directly to installed files must be captured with `chezmoi re-add <path>` first.
-Use `chezmoi edit` for templated files, including `~/.zprofile`.
+Capture and commit local changes before pulling. If branches diverge, merge or
+rebase in the source directory and resolve conflicts before applying.
 
-Neovim's `lazy-lock.json` is managed. After a deliberate plugin update, run
-`chezmoi re-add ~/.config/nvim/lazy-lock.json` and commit the result. On the other
-machine, apply the config and run `:Lazy restore` to install the locked versions.
+Neovim's `lazy-lock.json` records plugin versions. After updating plugins, run
+`chezmoi re-add ~/.config/nvim/lazy-lock.json` and commit the result. After pulling
+and applying that lockfile elsewhere, run `:Lazy restore` in Neovim.
 
-## Another machine
-
-Install Git, chezmoi, zsh 5.9+, tmux, Neovim 0.12+, a C compiler, and
-tree-sitter CLI 0.26.1+. Node/npm and Go are needed for the configured editor
-tooling. Configure a GitHub SSH key on machines that will push changes.
-
-Back up any existing shell, tmux, and Neovim configuration before applying.
-Initialize the source, install plugins, and review the resulting diff:
-
-```sh
-chezmoi init git@github.com:eusean-tg/dotfiles.git
-chezmoi git -- config user.email 304349849+eusean-tg@users.noreply.github.com
-sh "$(chezmoi source-path)/scripts/bootstrap.sh"
-chezmoi diff
-chezmoi apply
-exec zsh -l
-```
-
-For a machine without GitHub SSH authentication, use
-`chezmoi init https://github.com/eusean-tg/dotfiles.git`. Public HTTPS cloning
-needs no credentials; pushing still requires GitHub authentication.
-The repository-local noreply email keeps commits compatible with GitHub's
-private-email protection without changing other repositories' Git settings.
-
-Set zsh as the login shell if needed with `chsh -s "$(command -v zsh)"`.
-The selected zsh binary must be listed in `/etc/shells`.
-
-The bootstrap script clones missing Oh My Zsh, Powerlevel10k, zsh plugins, and
-tmux plugins from their upstream repositories. It preserves existing clones.
-Zsh plugins use `~/.oh-my-zsh/custom/plugins`; no Homebrew plugin paths are used.
-Update existing third-party clones with their own Git or plugin-manager commands.
-
-Use a Nerd Font for prompt and file icons. Optional shell tools are eza, bat
-(batcat on Ubuntu), fzf, fd (fdfind on Ubuntu), zoxide, lazygit, and Zed.
-The Oh My Zsh nvm plugin loads an existing nvm installation on the first Node
-command or Neovim launch. Bun is enabled when installed under `~/.bun`.
-
-In Neovim, run `:Lazy restore` and `:TSInstallAll`. Install external tools with
-`:Mason`: lua-language-server, stylua, html-lsp, css-lsp, json-lsp, gopls,
-goimports, gofumpt, prettier, and shfmt. SQL formatting uses `pg_format`
-(pgFormatter). Go linting uses golangci-lint from the machine's PATH.
-
-## Configuration ownership
-
-| Source | Installed path / purpose |
-| --- | --- |
-| `dot_config/zsh/interactive.zsh` | Shared interactive shell settings |
-| `dot_zshrc` | Loads the shared shell settings |
-| `dot_zshenv` | User-local binaries and optional Cargo environment |
-| `dot_zprofile.tmpl` | Homebrew executable PATH on macOS; user-local PATH on both OSes |
-| `dot_p10k.zsh` | Compact one-line prompt |
-| `dot_tmux.conf` | Mouse, pane navigation, session persistence |
-| `dot_config/nvim` | NvChad configuration and plugin lockfile |
-
-`~/.zshrc.local` holds machine-specific environment values and is not managed.
-The Mac's AWS profile, OpenMarket development settings, and WireGuard directory
-belong there. `~/.tmux.conf.local` is an optional unmanaged tmux override.
-Credentials, histories, plugin installations, session data, and caches stay
-outside the repository.
-
-Neovim formats Go with goimports then gofumpt on save. Other languages format
-on request with `<leader>fm`. The configuration includes Go/JSON LSP settings,
-SQL formatting, Git blame, HTTP requests, sessions, relative numbers, persistent
-undo, the dashboard, and shell/web/configuration parsers.
+Shell and tmux plugin clones have their own version control. Update them with
+their Git or plugin-manager commands; rerunning the bootstrap script preserves
+existing clones.
 
 ## Recovery
 
-Migration snapshots are outside Git:
+Git history stores versions of managed configuration. To undo a committed
+change, revert its commit in the source repository, review `chezmoi diff`, and
+run `chezmoi apply`.
 
-- Mac: `~/.local/state/dotfiles-migration/2026-09-10/mac-original.tar.gz`.
-- Shared: `~/.local/state/dotfiles-migration/2026-09-10/shared-original.tar.gz`.
-- The Mac also holds the shared snapshot and extracted copies of both.
-
-Each machine's migration directory contains its rollback instructions. Archive
-the managed source and any later edits before restoring a snapshot. Shell
-history, tmux sessions, and Neovim data are separate from these config archives.
-
-The Mac and shared retain the LAN repository as the `lan` remote. Its `main`
-branch preserves the original history. Back up the GitHub history separately
-with `chezmoi git -- push lan main:github-main`. Normal pushes and pulls use GitHub.
-
-Shared's Neovim 0.12.4 lives in `~/.local/opt/nvim-0.12.4`, exposed through
-`~/.local/bin/nvim`. Its distribution Neovim remains at `/usr/bin/nvim`.
+Restoring configuration from before chezmoi requires the backups made during
+installation. Preserve subsequent edits before restoring those files. A later
+`chezmoi apply` installs the managed source again. Shell history, editor caches,
+and saved sessions are runtime data outside the managed configuration.

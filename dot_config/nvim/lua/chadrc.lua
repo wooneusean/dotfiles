@@ -27,7 +27,7 @@ M.ui = {
 
   tabufline = {
     enabled = true,
-    lazyload = false, -- show the buffer line immediately instead of on 2nd buffer
+    lazyload = false, -- show the buffer line on startup
   },
 }
 
