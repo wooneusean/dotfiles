@@ -1,0 +1,8 @@
+.DS_Store
+*.local
+*.local.zsh
+*.swp
+*.swo
+*~
+.env
+.env.*
