@@ -28,9 +28,7 @@ fpath=("${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-completions/src" $fpath)
 plugins=(
   git gh z extract fzf sudo colored-man-pages aliases
   docker docker-compose kubectl npm python pip nvm
-)
-[[ $OSTYPE == linux* ]] && plugins+=(command-not-found)
-plugins+=(
+  command-not-found
   zsh-completions
   zsh-autosuggestions
   zsh-history-substring-search
