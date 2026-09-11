@@ -24,6 +24,8 @@ map("n", "N", "Nzzzv", { desc = "Prev search result, centred" })
 map("v", "<", "<gv", { desc = "Outdent, keep selection" })
 map("v", ">", ">gv", { desc = "Indent, keep selection" })
 
+map("x", "<leader>s", ":s/\\%V", { desc = "Substitute from visual selection" })
+
 -- Move the selected lines up/down
 map("v", "J", ":m '>+1<cr>gv=gv", { desc = "Move selection down" })
 map("v", "K", ":m '<-2<cr>gv=gv", { desc = "Move selection up" })

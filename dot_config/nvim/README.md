@@ -49,10 +49,25 @@ dashboard, automatic session management, inline Git blame, and a scrollbar.
 | `<leader>gB` | Show full blame information for the line |
 | `<leader>ld` | Show a diagnostic popup |
 | `<leader>Rs` | Send an HTTP request from an HTTP/REST buffer |
+| `<leader>s` in visual mode | Start a substitution restricted by the visual selection |
 | `<C-s>` | Save the file |
 | `<C-h/j/k/l>` | Move between windows |
 | `<C-Up/Down/Left/Right>` | Resize the window |
 | `jk` in insert mode | Leave insert mode |
+
+### Substitution in a visual selection
+
+Select text and press `<leader>s` to pre-fill `:'<,'>s/\%V`. Type `a/b/g` and
+press Enter to replace selected occurrences of `a` with `b`:
+
+```vim
+:'<,'>s/\%Va/b/g
+```
+
+The `'<,'>` range addresses whole lines. The `\%V` pattern requires a match to
+start inside the visual selection and works with character, line, and block
+selections. For a multi-character literal such as `foo`, use `\%Vfo\%Vo` to
+require its final character to be inside the selection too. See `:help /\%V`.
 
 ## Configuration files
 
