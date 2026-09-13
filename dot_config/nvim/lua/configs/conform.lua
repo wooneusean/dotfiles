@@ -1,7 +1,7 @@
 local options = {
   formatters_by_ft = {
     lua = { "stylua" },
-    sql = { "pg_format" },
+    sql = { "sqlfluff" },
     go = { "goimports", "gofumpt" },
     json = { "prettier" },
     jsonc = { "prettier" },
@@ -19,19 +19,9 @@ local options = {
   },
 
   formatters = {
-    pg_format = {
-      prepend_args = {
-        "-u",
-        "1", -- lowercase keywords
-        "-U",
-        "1", -- type names lowercase
-        "-f",
-        "1", -- function names lowercase
-        "-s",
-        "2", -- 2-space indent
-        "-w",
-        "100", -- wrap lines past 100 chars
-      },
+    sqlfluff = {
+      -- Keep fixes even when unfixable violations remain; nvim-lint reports them.
+      exit_codes = { 0, 1 },
     },
 
     prettier = {
@@ -40,6 +30,10 @@ local options = {
   },
 
   format_on_save = function(bufnr)
+    if vim.bo[bufnr].filetype == "sql" then
+      return { timeout_ms = 3000, lsp_format = "never" }
+    end
+
     if vim.bo[bufnr].filetype ~= "go" then
       return
     end

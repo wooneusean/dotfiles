@@ -22,7 +22,7 @@ return {
 
   {
     "mfussenegger/nvim-lint",
-    event = "BufWritePost",
+    event = { "User FilePost", "BufWritePost" },
     config = function()
       require "configs.lint"
     end,

@@ -21,16 +21,50 @@ the parsers listed in `lua/plugins/init.lua`; parser compilation requires the
 tree-sitter CLI and a C/C++ compiler. Mason installs external language servers
 and formatters. Use `:Mason` to inspect their installation status.
 
-Install pgFormatter (`pg_format`) for SQL formatting and golangci-lint for Go
+Install SQLFluff (`sqlfluff`) for SQL formatting and diagnostics and golangci-lint for Go
 linting through the system package manager or their upstream installers. These
 executables must be on Neovim's PATH.
 
 ## Editing behavior
 
-Go files run goimports followed by gofumpt on save. Other configured filetypes
+Go files run goimports followed by gofumpt on save. SQL files run SQLFluff on
+save with a three-second timeout. Other configured filetypes
 format on request with `<leader>fm`. JSON and JSONC use Prettier with trailing
-commas disabled. SQL uses pgFormatter with lowercase keywords and two-space
-indentation.
+commas disabled.
+
+SQLFluff diagnostics use the PostgreSQL dialect and run when opening a SQL
+file, after saving, and on leaving insert mode. Formatting and linting read
+project configuration; put a `.sqlfluff` file in the project so Conform can
+find it. This example uses uppercase SQL keywords and four-space indentation:
+
+```ini
+[sqlfluff]
+dialect = postgres
+max_line_length = 100
+exclude_rules = AL01, AL02, ST06, RF04
+
+[sqlfluff:indentation]
+tab_space_size = 4
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = upper
+
+[sqlfluff:rules:capitalisation.types]
+extended_capitalisation_policy = upper
+
+[sqlfluff:rules:capitalisation.functions]
+extended_capitalisation_policy = upper
+
+[sqlfluff:rules:capitalisation.literals]
+capitalisation_policy = upper
+
+[sqlfluff:rules:capitalisation.identifiers]
+extended_capitalisation_policy = lower
+
+[sqlfluff:layout:type:data_type]
+spacing_before = align
+align_within = create_table_statement
+```
 
 Language-server configuration includes Go, JSON, HTML, and CSS. JSON schemas
 come from SchemaStore. Go linting runs golangci-lint after writes. Treesitter
@@ -74,9 +108,9 @@ require its final character to be inside the selection too. See `:help /\%V`.
 | File | Purpose |
 | --- | --- |
 | `lua/plugins/init.lua` | Plugin declarations and Treesitter parser list |
-| `lua/configs/conform.lua` | Formatters and Go format-on-save policy |
+| `lua/configs/conform.lua` | Formatters and Go/SQL format-on-save policy |
 | `lua/configs/lspconfig.lua` | Language servers and JSON schemas |
-| `lua/configs/lint.lua` | Go linting |
+| `lua/configs/lint.lua` | Go and PostgreSQL linting |
 | `lua/mappings.lua` | Key bindings |
 | `lua/options.lua` | Editing and display options |
 | `lua/autocmds.lua` | Parser installation command, JSONC detection, and LSP folds |
