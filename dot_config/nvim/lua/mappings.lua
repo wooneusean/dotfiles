@@ -9,6 +9,11 @@ map("i", "jk", "<ESC>", { desc = "Escape insert mode" })
 -- ── Save / quit ────────────────────────────────────────────────
 map({ "n", "i", "v" }, "<C-s>", "<cmd>w<cr>", { desc = "Save file" })
 
+-- ── Jumplist ───────────────────────────────────────────────────
+-- NvChad maps <Tab> to the next buffer, and Nvim applies a <Tab> mapping to
+-- CTRL-I too unless <C-i> has a mapping of its own (:h CTRL-I).
+map("n", "<C-i>", "<C-i>", { desc = "Jump forward" })
+
 -- ── Window navigation is already <C-h/j/k/l> in NvChad ─────────
 -- Resize with arrows
 map("n", "<C-Up>", "<cmd>resize +2<cr>", { desc = "Window height +" })

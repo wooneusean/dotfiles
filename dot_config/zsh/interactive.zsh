@@ -136,6 +136,31 @@ wg_all() {
   done
 }
 
+# usage: notify make build
+notify() {
+  "$@"; local s=$?
+  local title msg="$*"
+  if [ $s -eq 0 ]; then title="✅ Succeeded"; else title="❌ Failed (exit $s)"; fi
+
+  if [ -n "$HERDR_SOCKET_PATH" ] && command -v herdr >/dev/null; then
+    # Inside herdr (any OS): herdr swallows OSC sequences, so use its CLI
+    herdr notification show "$title" --body "$msg" >/dev/null
+  elif [ "$(uname -s)" = "Linux" ] && [ -z "$SSH_CONNECTION" ] \
+       && { [ -n "$WAYLAND_DISPLAY" ] || [ -n "$DISPLAY" ]; } \
+       && command -v notify-send >/dev/null; then
+    # Local Ubuntu desktop: ask GNOME directly, works in any terminal
+    if [ $s -eq 0 ]; then
+      notify-send "$title" "$msg"
+    else
+      notify-send -u critical "$title" "$msg"
+    fi
+  else
+    # macOS Ghostty, or an SSH session: let the terminal handle it
+    printf '\e]9;%s: %s\e\\' "$title" "$msg"
+  fi
+  return $s
+}
+
 [[ -r "$BUN_INSTALL/_bun" ]] && source "$BUN_INSTALL/_bun"
 [[ -r "$HOME/.p10k.zsh" ]] && source "$HOME/.p10k.zsh"
 # Work-specific settings and secrets stay outside the managed source.
